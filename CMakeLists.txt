@@ -1,15 +1,40 @@
 cmake_minimum_required(VERSION 3.8)
 project(ros2_win_livox_handler)
 
+
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
+
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
+SET( LIBS livox_sdk_static )
+
+include_directories(
+        sdk_core/include
+        sdk_core/third_party/FastCRC
+        sdk_core/third_party/spdlog
+        sdk_core/third_party/cmdline
+)
+
+link_directories (
+  ./lib
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -23,6 +48,7 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(ros2_win_livox_handler src/livox_handler.cpp)
+target_link_libraries(ros2_win_livox_handler ${LIBS} )
 ament_target_dependencies(ros2_win_livox_handler rclcpp std_msgs)
 
 install(TARGETS
