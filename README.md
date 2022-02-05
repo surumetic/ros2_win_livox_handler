@@ -4,6 +4,7 @@
 - tested under following environment:
     - windows 11
     - ros2 galactic
+    - livox avia
 
 
 # Prerequisite
