@@ -30,6 +30,7 @@ include_directories(
         sdk_core/third_party/FastCRC
         sdk_core/third_party/spdlog
         sdk_core/third_party/cmdline
+        include/ros2_win_livox_handler
 )
 
 link_directories (
@@ -47,7 +48,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(ros2_win_livox_handler src/livox_handler.cpp)
+add_executable(ros2_win_livox_handler src/livox_handler.cpp src/callback.cpp)
 target_link_libraries(ros2_win_livox_handler ${LIBS} )
 ament_target_dependencies(ros2_win_livox_handler rclcpp std_msgs)
 
