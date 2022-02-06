@@ -1,10 +1,25 @@
 #include <livox_handler.hpp>
 
-
 volatile sig_atomic_t bLoopEnd = 0;
 void abrt_handler(int sig) {
   bLoopEnd = 1;
 }
+
+rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_pc2;
+
+// typedef struct sensor_msgs__msg__PointCloud2
+// {
+//   std_msgs__msg__Header header;
+//   uint32_t height;
+//   uint32_t width;
+//   sensor_msgs__msg__PointField__Sequence fields;
+//   bool is_bigendian;
+//   uint32_t point_step;
+//   uint32_t row_step;
+//   rosidl_runtime_c__uint8__Sequence data;
+//   bool is_dense;
+// } sensor_msgs__msg__PointCloud2;
+
 
 class ROS2LivoxHandler : public rclcpp::Node
 {
@@ -12,7 +27,10 @@ class ROS2LivoxHandler : public rclcpp::Node
     ROS2LivoxHandler()
     : Node("ros2_win_livox_handler")
     {
-      publisher = this->create_publisher<std_msgs::msg::String>("livox_status", 10);
+      // publisher = this->create_publisher<std_msgs::msg::String>("livox_status", 10);
+      // publisher_pc2 = this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/pointcloud2",10);
+      publisher_pc2 = this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/pointcloud2",rclcpp::QoS(10));
+
     }
 
     ~ROS2LivoxHandler(){
@@ -54,13 +72,20 @@ class ROS2LivoxHandler : public rclcpp::Node
 
 
       while(rclcpp::ok() && !bLoopEnd){
-        message->data = "hello " + std::to_string(pub_counter++);
+
+        // std::mutex mtx;
+        // {
+        //   std::lock_guard<std::mutex> lock(mtx);
+        //   publisher_pc2->publish(*pc2_msg);
+        // }
+
+        // message->data = "hello " + std::to_string(pub_counter++);
         // RCLCPP_INFO(this->get_logger(),"Pub:%s",message->data.c_str());
-        publisher->publish(*message);
+        // publisher->publish(*message);
         loop_rate.sleep();                                                                                                                                                                                                                                                                            
       }
 
-      UninitializeAndStopSampling();
+      StopSampling();
       std::cout << "livox stop sampling" << std::endl;      
 
       Uninit();
@@ -72,11 +97,10 @@ class ROS2LivoxHandler : public rclcpp::Node
 
   private:
     LivoxSdkVersion _sdkversion;
+    // shared_ptr<sensor_msgs::msg::PointCloud2> pc2_msg;
 
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
-
-
-
+    // rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
+    // rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_pc2;
 };
 
 

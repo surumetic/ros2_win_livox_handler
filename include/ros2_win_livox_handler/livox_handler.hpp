@@ -15,7 +15,11 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "sensor_msgs/msg/point_cloud2.hpp"
+
+// #include <pcl_conversions/pcl_conversions.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
 
 #include <chrono>
 #include <thread>
@@ -34,7 +38,7 @@ using std::this_thread::sleep_for;
 using namespace std;
 
 void InitDevicesAndDataReceiveCount();
-void UninitializeAndStopSampling();
+void StopSampling();
 void GetLidarData(uint8_t handle, LivoxEthPacket *data, uint32_t data_num, void *client_data);
 void OnDeviceBroadcast(const BroadcastDeviceInfo *info);
 void OnDeviceInfoChange(const DeviceInfo *info, DeviceEvent type);

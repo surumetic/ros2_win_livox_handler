@@ -22,6 +22,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(tf2_geometry_msgs)
+# find_package(pcl_conversions)
 
 SET( LIBS livox_sdk_static )
 
@@ -50,7 +52,14 @@ endif()
 
 add_executable(ros2_win_livox_handler src/livox_handler.cpp src/callback.cpp)
 target_link_libraries(ros2_win_livox_handler ${LIBS} )
-ament_target_dependencies(ros2_win_livox_handler rclcpp std_msgs)
+ament_target_dependencies(ros2_win_livox_handler 
+  rclcpp 
+  std_msgs 
+  sensor_msgs
+  tf2_geometry_msgs
+  
+  # pcl_conversions
+)
 
 install(TARGETS
   ros2_win_livox_handler

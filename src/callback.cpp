@@ -1,5 +1,9 @@
-
 #include <livox_handler.hpp>
+
+
+// extern shared_ptr<sensor_msgs::msg::PointCloud2> pc2_msg;
+extern rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_pc2;
+
 
 typedef enum {
   kDeviceStateDisconnect = 0,
@@ -25,7 +29,7 @@ void InitDevicesAndDataReceiveCount(){
     memset(data_recveive_count, 0, sizeof(data_recveive_count));
 }
 
-void UninitializeAndStopSampling(){
+void StopSampling(){
       /** Uninitialize Livox-SDK. */
       int i = 0;
       for (i = 0; i < kMaxLidarCount; ++i) {
@@ -40,7 +44,79 @@ void UninitializeAndStopSampling(){
 /** Receiving point cloud data from Livox LiDAR. */
 void GetLidarData(uint8_t handle, LivoxEthPacket *data, uint32_t data_num, void *client_data) {
   if (data) {
+    // LivoxExtendRawPoint *p_point_buffer;
+
+    static std::vector<LivoxExtendRawPoint> p_point_buffer;
+
     data_recveive_count[handle] ++ ;
+
+    if ( data ->data_type == kExtendCartesian) {
+        LivoxExtendRawPoint *p_point_data = (LivoxExtendRawPoint *)data->data;
+        // p_point_buffer.push_back(*p_point_data);    
+
+
+        for(unsigned int i = 0; i < data_num; i++){
+            p_point_buffer.push_back(p_point_data[i]);
+                    
+        }        
+    }
+
+
+    // std::mutex mtx;
+    if (data_recveive_count[handle] % 500 == 0) {
+        //https://github.com/ros2/turtlebot2_demo/blob/master/depthimage_to_pointcloud2/src/depthimage_to_pointcloud2_node.cpp
+
+        shared_ptr<sensor_msgs::msg::PointCloud2> pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+        // pc2_msg->header.stamp =ros_clock.now();// now;
+        pc2_msg->header.frame_id="map";
+        pc2_msg->height=1;
+        pc2_msg->is_dense=false;
+        pc2_msg->is_bigendian=false;
+        pc2_msg->width=p_point_buffer.size();
+        pc2_msg->fields.clear();
+        pc2_msg->fields.reserve(1);
+        pc2_msg->data.resize(p_point_buffer.size());
+        sensor_msgs::PointCloud2Modifier pcd_modifier(*pc2_msg);
+        // pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+        pcd_modifier.setPointCloud2FieldsByString(2, "xyz","rgb");
+        // pcd_modifier.setPointCloud2FieldsByString(2, "xyz","intensity");
+
+
+        sensor_msgs::PointCloud2Iterator<float> iter_x(*pc2_msg, "x");
+        sensor_msgs::PointCloud2Iterator<float> iter_y(*pc2_msg, "y");
+        sensor_msgs::PointCloud2Iterator<float> iter_z(*pc2_msg, "z");            
+        sensor_msgs::PointCloud2Iterator<int8_t> iter_r(*pc2_msg, "r");
+        sensor_msgs::PointCloud2Iterator<int8_t> iter_g(*pc2_msg, "g");
+        sensor_msgs::PointCloud2Iterator<int8_t> iter_b(*pc2_msg, "b");            
+        // sensor_msgs::PointCloud2Iterator<float> iter_i(*pc2_msg, "intensity");            
+
+        std::cout << "size of buffer : " << p_point_buffer.size() << std::endl;
+        // for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z){
+        for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z,++iter_r, ++iter_g, ++iter_b){
+        // for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z,++iter_i){
+            *iter_x = (float)(p_point_buffer[i].x / 1000.f);
+            *iter_y = (float)(p_point_buffer[i].y / 1000.f);
+            *iter_z = (float)(p_point_buffer[i].z / 1000.f);
+
+            // *iter_i = (float)(p_point_buffer[i].reflectivity * 1.f);
+
+            *iter_r =  p_point_buffer[i].reflectivity;
+            *iter_g =  p_point_buffer[i].reflectivity;
+            *iter_b =  p_point_buffer[i].reflectivity;
+            
+
+            // *iter_r = (float)(p_point_buffer[i].reflectivity / 255.f);
+            // *iter_g = (float)(p_point_buffer[i].reflectivity / 1.f);
+            // *iter_b = (float)(p_point_buffer[i].reflectivity / 255.f);
+        }
+        publisher_pc2->publish(*pc2_msg);
+
+        p_point_buffer.clear();
+
+
+    }        
+
     if (data_recveive_count[handle] % 100 == 0) {
       /** Parsing the timestamp and the point cloud data. */
       uint64_t cur_timestamp = *((uint64_t *)(data->timestamp));
@@ -50,21 +126,83 @@ void GetLidarData(uint8_t handle, LivoxEthPacket *data, uint32_t data_num, void 
         LivoxSpherPoint *p_point_data = (LivoxSpherPoint *)data->data;
       }else if ( data ->data_type == kExtendCartesian) {
         LivoxExtendRawPoint *p_point_data = (LivoxExtendRawPoint *)data->data;
+        // cout << "reflectivity" << endl;
+        // cout << (p_point_data[0].reflectivity / 255.f) << endl;//0-big
 
-        cout << "----" << endl;
-        cout << sizeof(LivoxExtendRawPoint) << endl; // 14
-        cout << sizeof(*p_point_data) << endl; // 14
-        cout << sizeof(p_point_data) << endl; // 8
-        // cout << sizeof(data->data) << endl; //1
-        // cout << sizeof(*data->data) << endl; //1
-        cout << sizeof(p_point_data[0]) << endl; //14
-        cout << p_point_data[0].x << endl;
-        cout << "data_num" << data_num << endl;
+        // p_point_buffer.push_back(*p_point_data);
 
-        for(unsigned int i = 0; i < data_num; i++){
-          ;
-          
-        }
+        // cout << "----" << endl;
+        // cout << sizeof(LivoxExtendRawPoint) << endl; // 14
+        // cout << sizeof(*p_point_data) << endl; // 14
+        // cout << sizeof(p_point_data) << endl; // 8
+        // // cout << sizeof(data->data) << endl; //1
+        // // cout << sizeof(*data->data) << endl; //1
+        // cout << sizeof(p_point_data[0]) << endl; //14
+        // cout << p_point_data[0].x << endl;//0-big
+        // cout << "data_num" << data_num << endl;//96
+
+        // std::mutex mtx;
+        // {
+        //     // rosidl_runtime_c__uint8__Sequence _data;
+        //     // _data.data;
+        //     // std::cout << _data.size << std::endl;
+
+        //     // ROSIDL_RUNTIME_C__PRIMITIVE_SEQUENCE(uint8, uint8_t)
+
+        //     //   typedef struct rosidl_runtime_c__ ## STRUCT_NAME ## __Sequence \
+        //     //   { \
+        //     //     TYPE_NAME * data; /*!< The pointer to an array of STRUCT_NAME */ \
+        //     //     size_t size; /*!< The number of valid items in data */ \
+        //     //     size_t capacity; /*!< The number of allocated items in data */ \
+        //     //   } rosidl_runtime_c__ ## STRUCT_NAME ## __Sequence;
+
+
+        //     std::lock_guard<std::mutex> lock(mtx);
+
+        //     // rclcpp::Clock system_clock(rcl_clock_type_t RCL_SYSTEM_TIME);
+        //     // rclcpp::Clock ros_clock(rcl_clock_type_t RCL_ROS_TIME);
+        //     // rclcpp::Clock steady_clock(rcl_clock_type_t RCL_STEADY_TIME);
+
+        //     // rclcpp::Time now = system_clock.now();
+
+        //     //https://github.com/ros2/turtlebot2_demo/blob/master/depthimage_to_pointcloud2/src/depthimage_to_pointcloud2_node.cpp
+
+        //     shared_ptr<sensor_msgs::msg::PointCloud2> pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+
+        //     // pc2_msg->header.stamp =ros_clock.now();// now;
+        //     pc2_msg->header.frame_id="map";
+        //     pc2_msg->height=1;
+        //     pc2_msg->is_dense=false;
+        //     pc2_msg->is_bigendian=false;
+        //     pc2_msg->width=data_num;
+        //     pc2_msg->fields.clear();
+        //     pc2_msg->fields.reserve(1);
+        //     sensor_msgs::PointCloud2Modifier pcd_modifier(*pc2_msg);
+        //     pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+
+        //     sensor_msgs::PointCloud2Iterator<float> iter_x(*pc2_msg, "x");
+        //     sensor_msgs::PointCloud2Iterator<float> iter_y(*pc2_msg, "y");
+        //     sensor_msgs::PointCloud2Iterator<float> iter_z(*pc2_msg, "z");            
+        //     // pc2_msg->data.size();// = _data;
+
+        //     // std::vector<uint8_t, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<uint8_t>>;
+        //     //   _data_type data;
+
+
+        //     // delete(pc2_msg->data.data)
+
+        //     for(unsigned int i = 0; i < data_num; i++){
+        //         *iter_x = (float)(p_point_data[i].x / 1000.f);
+        //         *iter_y = (float)(p_point_data[i].y / 1000.f);
+        //         *iter_z = (float)(p_point_data[i].z / 1000.f);
+
+        //         // pc2_msg->data.
+            
+        //     }
+        //     publisher_pc2->publish(*pc2_msg);
+
+        // }
+
 
         //cout << p_point_data[0] << endl;
 
@@ -101,7 +239,7 @@ void GetLidarData(uint8_t handle, LivoxEthPacket *data, uint32_t data_num, void 
       }else if ( data ->data_type == kTripleExtendSpherical) {
         LivoxTripleExtendSpherPoint *p_point_data = (LivoxTripleExtendSpherPoint *)data->data;
       }
-      printf("data_type %d packet num %d\n", data->data_type, data_recveive_count[handle]);
+    //   printf("data_type %d packet num %d\n", data->data_type, data_recveive_count[handle]);
     }
   }
 }
