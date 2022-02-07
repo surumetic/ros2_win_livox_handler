@@ -13,6 +13,12 @@
 - build based on visual studio 2019
 - copy /lib/livox_sdk_static.lib here
 
+# run 
+
+```
+run ros2_win_livox_handler ros2_win_livox_handler
+```
+
 # rviz2 views
 
 - point color : axis-z
