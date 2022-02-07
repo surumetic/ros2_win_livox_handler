@@ -91,7 +91,7 @@ void GetLidarData(uint8_t handle, LivoxEthPacket *data, uint32_t data_num, void 
         sensor_msgs::PointCloud2Iterator<int8_t> iter_b(*pc2_msg, "b");            
         // sensor_msgs::PointCloud2Iterator<float> iter_i(*pc2_msg, "intensity");            
 
-        std::cout << "size of buffer : " << p_point_buffer.size() << std::endl;
+        // std::cout << "size of buffer : " << p_point_buffer.size() << std::endl;
         // for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z){
         for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z,++iter_r, ++iter_g, ++iter_b){
         // for(unsigned int i = 0; i < p_point_buffer.size(); ++i,++iter_x, ++iter_y, ++iter_z,++iter_i){
