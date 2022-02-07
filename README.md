@@ -7,9 +7,20 @@
     - livox sdk v2.3.0
     - livox avia
 
-
 # Prerequisite
 
 - install Livox SDK according to windows install instructions
 - build based on visual studio 2019
 - copy /lib/livox_sdk_static.lib here
+
+# rviz2 views
+
+- point color : axis-z
+
+![rviz2_axis](./doc/rviz2_axis.jpg "rviz2 axis based color")
+
+- point color : intensity 
+  - each point's instensity is represented as rgb attribute
+
+![rviz2_reflectivity](./doc/rviz2_reflectivity.jpg "rviz2 reflectivity based color")
+
