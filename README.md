@@ -4,6 +4,7 @@
 - tested under following environment:
     - windows 11
     - ros2 galactic
+    - livox sdk v2.3.0
     - livox avia
 
 
