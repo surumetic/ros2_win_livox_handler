@@ -57,12 +57,20 @@ ament_target_dependencies(ros2_win_livox_handler
   std_msgs 
   sensor_msgs
   tf2_geometry_msgs
-  
-  # pcl_conversions
 )
+
+add_executable(pointcloud_subscriber src/pointcloud_subscriber.cpp)
+target_link_libraries(pointcloud_subscriber ${LIBS} )
+ament_target_dependencies(pointcloud_subscriber 
+  rclcpp 
+  std_msgs 
+  sensor_msgs
+)
+
 
 install(TARGETS
   ros2_win_livox_handler
+  pointcloud_subscriber
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
