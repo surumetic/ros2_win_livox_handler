@@ -29,7 +29,7 @@ class ROS2LivoxHandler : public rclcpp::Node
     {
       // publisher = this->create_publisher<std_msgs::msg::String>("livox_status", 10);
       // publisher_pc2 = this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/pointcloud2",10);
-      publisher_pc2 = this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/pointcloud2",rclcpp::QoS(10));
+      publisher_pc2 = this->create_publisher<sensor_msgs::msg::PointCloud2>("/livox/lidar",rclcpp::QoS(10));
 
     }
 
