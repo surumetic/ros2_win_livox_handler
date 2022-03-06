@@ -11,7 +11,7 @@
 
 - Install Livox SDK according to windows install instructions
 - Build based on visual studio 2019
-- Copy /lib/livox_sdk_static.lib from livox sdk
+- Bring /lib/livox_sdk_static.lib from livox sdk
 
 # Run 
 
